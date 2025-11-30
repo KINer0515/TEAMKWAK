@@ -22,14 +22,11 @@ public class HighScoreScreen extends Screen {
 	private List<Score> highScores;
 
 	/**
-	 * Constructor, establishes the properties of the screen.
-	 * 
-	 * @param width
-	 *            Screen width.
-	 * @param height
-	 *            Screen height.
-	 * @param fps
-	 *            Frames per second, frame rate at which the game is run.
+	 * Create a high-score screen configured to the specified dimensions and frame rate.
+	 *
+	 * @param width  the screen width in pixels
+	 * @param height the screen height in pixels
+	 * @param fps    target frames per second
 	 */
 	public HighScoreScreen(final int width, final int height, final int fps) {
 		super(width, height, fps);

@@ -18,8 +18,7 @@ public class AchievementManager {
     private List<Achievement> achievements;
 
     /**
-     * Private constructor to initialize the achievement list.
-     * Part of the Singleton pattern.
+     * Initializes the achievement list with the game's predefined achievements.
      */
     private AchievementManager() {
         achievements = new ArrayList<>();
@@ -46,9 +45,9 @@ public class AchievementManager {
     }
 
     /**
-     * Synchronizes the in-memory achievement status with the given user's data.
+     * Aligns the manager's in-memory achievements with the provided user's saved achievement states.
      *
-     * @param user The user whose achievements should be loaded. If null, all achievements are reset to locked.
+     * @param user the user whose achievement states should be applied; if null, all achievements are locked
      */
     public void syncAchievementsWithUser(User user) {
         if (user == null) {
@@ -79,9 +78,14 @@ public class AchievementManager {
     }
 
     /**
-     * Unlocks a specific achievement by name for the current user.
+     * Unlocks the achievement with the given name for the currently logged-in user.
      *
-     * @param name The name of the achievement to unlock.
+     * If no user is logged in, the method does nothing and logs a warning. When an
+     * achievement is unlocked the achievement state is updated and the user's
+     * achievement map is set to `true`; the method then attempts to persist all
+     * users and logs a severe error if persistence fails.
+     *
+     * @param name the name of the achievement to unlock
      */
     public void unlockAchievement(String name) {
         User currentUser = Core.getCurrentUser();
@@ -107,7 +111,18 @@ public class AchievementManager {
     }
 
     /**
-     * Handles game events when an enemy is defeated to check for achievements.
+     * Evaluates the provided game state to unlock kill-related achievements for the current user.
+     *
+     * <p>Specifically, this checks and may unlock:
+     * <ul>
+     *   <li>"First Blood" — unlocked upon the user's first enemy defeat.</li>
+     *   <li>"Bad Sniper" — unlocked when the user has fired more than 5 bullets and their accuracy
+     *       (ships destroyed divided by bullets shot) is less than or equal to 0.8.</li>
+     * </ul>
+     *
+     * If no user is currently logged in, the method does nothing.
+     *
+     * @param gameState the current game state used to evaluate kill-related achievements
      */
     public void checkKillAchievements(GameState gameState) {
         User currentUser = Core.getCurrentUser();
@@ -128,9 +143,9 @@ public class AchievementManager {
     }
 
     /**
-     * Handles game events related to elapsed time.
+     * Unlocks the "Bear Grylls" achievement for the current user when the provided elapsed time is 60 seconds or greater.
      *
-     * @param elapsedSeconds The total number of seconds elapsed in the game.
+     * @param elapsedSeconds the total number of seconds elapsed in the game
      */
     public void onTimeElapsedSeconds(int elapsedSeconds) {
         User currentUser = Core.getCurrentUser();

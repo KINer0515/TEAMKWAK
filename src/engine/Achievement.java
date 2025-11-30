@@ -58,7 +58,9 @@ public class Achievement {
     }
 
     /**
-     * Locks the achievement.
+     * Mark the achievement as locked.
+     *
+     * After calling this method the achievement's unlocked state is false.
      */
     public void lock() {
         this.unlocked = false;

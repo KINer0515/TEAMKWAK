@@ -237,7 +237,13 @@ public class GameScreen extends Screen {
 	}
 
 	/**
-	 * Updates the elements on screen and checks for events.
+	 * Advance a single frame: process player input and shooting, update all game entities and timers,
+	 * manage collisions and item/bullet cleanup, handle phase transitions and boss logic, and apply
+	 * end‑of‑level consequences such as awarding coins or unlocking achievements.
+	 *
+	 * <p>This method mutates screen state (ships, enemies, bullets, items, bosses, timers,
+	 * scores, lives, achievements and running flag) and may mark the level as finished or stop the
+	 * screen when end conditions are met.</p>
 	 */
 	protected final void update() {
 		super.update();

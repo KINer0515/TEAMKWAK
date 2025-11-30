@@ -52,8 +52,10 @@ public class CollisionManager {
     }
 
     /**
-	 * Manages collisions between bullets and ships.
-	 */
+     * Handles all interactions between bullets and ships or enemy entities on the game screen.
+     *
+     * Processes collisions for player and enemy bullets: applies damage to ships, enemies, and bosses; decrements player lives and shows health feedback when player ships are hit (respecting invincibility and destroyed states); awards points and coins and increments destroyed counters for defeated enemies; triggers item drops from defeated enemies; unlocks or checks achievements when appropriate; and collects bullets that should be removed or recycled (respecting bullet penetration behavior).
+     */
 	private void manageBulletShipCollisions() {
 		Set<Bullet> recyclable = new HashSet<Bullet>();
 		for (Bullet bullet : this.gameScreen.getBullets())

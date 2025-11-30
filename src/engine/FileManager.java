@@ -31,6 +31,12 @@ public final class FileManager {
     private static final String HIGHSCORES_FILE_PATH = USERS_DIR + java.io.File.separator + "highscores.json";
     private static List<Score> highScores;
 
+    /**
+     * Initializes the FileManager singleton, prepares the user-data directory, and loads persisted high scores.
+     *
+     * Initializes the logger, ensures the USERS_DIR directory exists (creating it if necessary and logging success or failure),
+     * and populates the in-memory high scores by calling loadHighScores().
+     */
     private FileManager() {
         logger = Core.getLogger();
         File dir = new File(USERS_DIR);
@@ -44,17 +50,35 @@ public final class FileManager {
         loadHighScores();
     }
 
+    /**
+     * Get the singleton FileManager instance, creating it if necessary.
+     *
+     * @return the singleton FileManager instance
+     */
     protected static FileManager getInstance() {
         if (instance == null)
             instance = new FileManager();
         return instance;
     }
 	
-    public List<Score> getHighScores() {
+    /**
+	 * Retrieve the in-memory list of high scores maintained by the FileManager.
+	 *
+	 * @return the current list of high scores; the returned list is the internal cache and modifications to it will affect FileManager's state
+	 */
+	public List<Score> getHighScores() {
 		return highScores;
 	}
 
-    public void loadSprite(final Map<SpriteType, boolean[][]> spriteMap)
+    /**
+	 * Populate each boolean[][] in spriteMap with pixel values read from the embedded "graphics" resource.
+	 *
+	 * Each character '1' in the resource sets the corresponding array cell to `true`; each '0' sets it to `false`.
+	 *
+	 * @param spriteMap map from SpriteType to a preallocated 2D boolean array that will be filled with sprite pixels
+	 * @throws IOException if reading the "graphics" resource fails
+	 */
+	public void loadSprite(final Map<SpriteType, boolean[][]> spriteMap)
 			throws IOException {
 		InputStream inputStream = null;
 
@@ -86,6 +110,14 @@ public final class FileManager {
 		}
 	}
 
+	/**
+	 * Loads the bundled TrueType font and returns it at the specified size.
+	 *
+	 * @param size the font size in points
+	 * @return the loaded Font derived to the requested size
+	 * @throws FontFormatException if the font resource is not a valid font
+	 * @throws IOException if the font resource cannot be read or the stream fails to close
+	 */
 	public Font loadFont(final float size) throws IOException,
 			FontFormatException {
 		InputStream inputStream = null;
@@ -104,6 +136,17 @@ public final class FileManager {
 		return font;
 	}
 
+	/**
+	 * Load user accounts from the users.json file and return them keyed by username.
+	 *
+	 * The method parses JSON stored at USERS_FILE_PATH, constructs User objects with
+	 * their stored passwords and achievement mappings, and returns a map from
+	 * username to User. If the file is missing or parsing fails, an empty map is
+	 * returned (a new file will be created when users are next saved).
+	 *
+	 * @return a map of usernames to corresponding User objects; empty if no data was loaded
+	 * @throws IOException if an I/O error occurs while opening or reading the users file
+	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, User> loadUsers() throws IOException {
 		Map<String, User> users = new HashMap<>();
@@ -144,6 +187,15 @@ public final class FileManager {
 		return users;
 	}
 
+	/**
+	 * Serialize the provided users map and write it to the users.json file in the user data directory.
+	 *
+	 * The method overwrites the existing file and stores each user's username, password, and achievements
+	 * in a JSON structure under the top-level `users` array.
+	 *
+	 * @param users a map of usernames to User objects to persist
+	 * @throws IOException if an I/O error occurs while writing the users file
+	 */
 	public void saveUsers(final Map<String, User> users)
 			throws IOException {
 		try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(USERS_FILE_PATH, false), "UTF-8"))) {
@@ -178,6 +230,14 @@ public final class FileManager {
 		}
 	}
 
+	/**
+	 * Initializes and populates the in-memory highScores list from the highscores JSON file.
+	 *
+	 * Reads HIGHSCORES_FILE_PATH, parses the "highScores" array, constructs Score objects,
+	 * sorts the resulting list, and stores it in the class-level `highScores` field.
+	 * If the file is missing the list remains empty and an informational message is logged.
+	 * If parsing fails an error is logged.
+	 */
 	@SuppressWarnings("unchecked")
 	private void loadHighScores() {
 		highScores = new ArrayList<>();
@@ -213,6 +273,14 @@ public final class FileManager {
 		}
 	}
 
+	/**
+	 * Writes the in-memory high score list to the highscores.json file in the user data directory.
+	 *
+	 * The output is a JSON object with a top-level "highScores" array; each entry contains
+	 * the fields "name", "score", "stage", "killed", "bullets", and "accuracy".
+	 *
+	 * @throws IOException if writing to the highscores.json file fails
+	 */
 	public void saveHighScores() throws IOException {
 		try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(HIGHSCORES_FILE_PATH, false), "UTF-8"))) {
 			logger.info("Saving high scores to JSON.");
@@ -239,6 +307,14 @@ public final class FileManager {
 		}
 	}
 
+	/**
+	 * Escape backslashes and double quotes for safe inclusion in JSON.
+	 *
+	 * <p>Null inputs are converted to an empty string.
+	 *
+	 * @param str the input string to escape
+	 * @return the input with backslashes (`\`) and double quotes (`"`) escaped, or an empty string if {@code str} is null
+	 */
 	private String escapeJson(String str) {
 		if (str == null) return "";
 		return str.replace("\\", "\\\\").replace("\"", "\\\"");

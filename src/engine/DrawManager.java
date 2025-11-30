@@ -628,8 +628,23 @@ public final class DrawManager {
 	}
 
 	/**
-	 * Draws a single shop item with level indicators.
-	 */
+	     * Render a shop item row showing its name, ownership/level status, optional description, and purchasable level options.
+	     *
+	     * When the item is selected the title is highlighted and the description is shown; when level-selection mode is active
+	     * a grid of level entries is rendered indicating ownership, affordability, and the currently highlighted level.
+	     *
+	     * @param screen         drawing target used to compute layout bounds
+	     * @param itemName       visible name of the shop item
+	     * @param description    descriptive text displayed when the item is selected
+	     * @param prices         array of prices where prices[i] is the cost for level (i+1); length must be >= maxLevel
+	     * @param maxLevel       maximum attainable level for this item
+	     * @param currentLevel   highest level currently owned for this item (0 if not owned)
+	     * @param yPosition      y coordinate (in pixels) where the item's title should be drawn
+	     * @param isSelected     true if the item is currently selected in the list (affects title color and description visibility)
+	     * @param playerCoins    current player coin balance used to determine affordability of level entries
+	     * @param isLevelSelection true to display per-level purchase/ownership entries for this item
+	     * @param selectedLevel  the level index currently highlighted in level-selection mode (1-based)
+	     */
 	public void drawShopItem(final Screen screen, final String itemName, final String description, final int[] prices, final int maxLevel, final int currentLevel, final int yPosition, final boolean isSelected, final int playerCoins, final boolean isLevelSelection, final int selectedLevel) {
 		if (isSelected || isLevelSelection) {
 			backBufferGraphics.setColor(Color.GREEN);
@@ -682,12 +697,15 @@ public final class DrawManager {
 	    }
 	
 		/**
-		 * Draws the login screen.
+		 * Render the login screen UI with title, username and masked password fields, a selectable LOGIN button, and an optional error message.
 		 *
-		 * @param screen         The screen to draw on.
-		 * @param username       The current username text.
-		 * @param password       The current password text.
-		 * @param selectedField  The currently selected UI element.
+		 * The currently focused element is highlighted; empty username/password fields display a "_______" placeholder. The password is shown masked as asterisks.
+		 *
+		 * @param screen        the Screen to draw onto
+		 * @param username      the current username text (displayed or replaced by "_______" if empty)
+		 * @param password      the current password text (rendered as asterisks or "_______" if empty)
+		 * @param selectedField index of the currently focused UI element: 0 = username, 1 = password, 2 = login button
+		 * @param errorMessage  optional error message to display in red near the bottom; may be null
 		 */
 		public void drawLoginScreen(final Screen screen, final String username, final String password, final int selectedField, final String errorMessage) {
 			// Title
@@ -733,8 +751,18 @@ public final class DrawManager {
 		}
 	
 		/**
-		 * Draws purchase feedback message.
-		 */
+	 * Displays a centered purchase-feedback popup near the top of the screen.
+	 *
+	 * Draws a translucent dark rounded rectangle (300×50) horizontally centered at y=70,
+	 * outlines it with a color chosen from the message content, and renders the message
+	 * text centered inside the popup using the regular font.
+	 *
+	 * The outline color is selected as follows: green when the message contains "Purchased",
+	 * red when it contains "Not enough" or "failed", and yellow otherwise.
+	 *
+	 * @param screen  the target screen providing width/height for positioning
+	 * @param message the feedback text to display (its content controls the outline color)
+	 */
 		public void drawShopFeedback(final Screen screen, final String message) {
 			int popupWidth = 300;
 			int popupHeight = 50;

@@ -37,16 +37,16 @@ public class ScoreScreen extends Screen {
 	private User currentUser;
 
 	/**
-	 * Constructor, establishes the properties of the screen.
-	 * 
-	 * @param width
-	 *            Screen width.
-	 * @param height
-	 *            Screen height.
-	 * @param fps
-	 *            Frames per second, frame rate at which the game is run.
-	 * @param gameState
-	 *            Current game state.
+	 * Create a score screen that captures end-of-game statistics and determines high-score status.
+	 *
+	 * Initializes this screen with the final score, remaining lives, bullets fired, and ships destroyed
+	 * taken from the provided GameState; loads the global high-score list and sets `isNewRecord`
+	 * when the current score qualifies; and records the currently logged-in user.
+	 *
+	 * @param width the screen width in pixels
+	 * @param height the screen height in pixels
+	 * @param fps the target frames per second for the screen
+	 * @param gameState the final game state containing score, lives remaining, bullets shot, and ships destroyed
 	 */
 	public ScoreScreen(final int width, final int height, final int fps,
 			final GameState gameState) {
@@ -79,7 +79,11 @@ public class ScoreScreen extends Screen {
 	}
 
 	/**
-	 * Updates the elements on screen and checks for events.
+	 * Render the score screen and handle navigation input.
+	 *
+	 * Draws the current screen and, once the input delay has finished, processes keyboard input:
+	 * pressing Escape sets the return code to 1 and stops the screen (return to main menu);
+	 * pressing Space sets the return code to 2 and stops the screen (play again).
 	 */
 	protected final void update() {
 		super.update();
@@ -101,7 +105,11 @@ public class ScoreScreen extends Screen {
 
 
 	/**
-	 * Draws the elements associated with the screen.
+	 * Render the game-over screen and end-of-game statistics.
+	 *
+	 * Draws the game-over banner and the results (score, lives remaining, ships destroyed,
+	 * accuracy) and indicates whether the current score is a new high score. The name-entry
+	 * UI is intentionally not drawn because the current user is known.
 	 */
 	private void draw() {
 		drawManager.initDrawing(this);
@@ -117,4 +125,3 @@ public class ScoreScreen extends Screen {
 		drawManager.completeDrawing(this);
 	}
 }
-

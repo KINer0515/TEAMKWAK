@@ -53,10 +53,11 @@ public class JsonLoader {
     }
 
     /**
-     * Public entry point to parse a generic JSON string into a Map.
-     * @param jsonContent The raw string content of the JSON file.
-     * @return A map representing the JSON object.
-     * @throws IOException if parsing fails.
+     * Parses a JSON string into a generic Map representation.
+     *
+     * @param jsonContent the JSON text to parse; the top-level value must be a JSON object
+     * @return a Map representing the top-level JSON object; nested values are Maps, Lists, Numbers (Long/Double), Booleans, Strings, or null
+     * @throws IOException if the input is not valid JSON or parsing fails
      */
     public static Map<String, Object> parseGeneric(String jsonContent) throws IOException {
         try {
@@ -66,6 +67,14 @@ public class JsonLoader {
         }
     }
 
+    /**
+     * Advance the parser to the next character and update internal position.
+     *
+     * Updates the current index and current character; when the end of the input
+     * string is reached the current character is set to `'\0'`.
+     *
+     * @return the character at the new position, or `'\0'` if at end of input
+     */
     private char next() {
         if (++at >= json.length()) {
             ch = '\0'; // End of file

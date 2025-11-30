@@ -50,10 +50,14 @@ public final class Core {
 
 
 	/**
-	 * Test implementation.
-	 * 
-	 * @param args
-	 *            Program args, ignored.
+	 * Application entry point that initializes logging, subsystems, and runs the main game loop.
+	 *
+	 * <p>Sets up log handlers, creates the main Frame and DrawManager, initializes levels,
+	 * and drives the central screen/state machine that handles title, game, shop, high-score,
+	 * achievement, credits, and login flows. Persists global high scores at the end of runs
+	 * and exits the JVM when the loop terminates.</p>
+	 *
+	 * @param args program arguments (ignored)
 	 */
 	public static void main(final String[] args) {
 		try {
@@ -406,13 +410,11 @@ public final class Core {
 	}
 
 	/**
-	 * Controls creation of new cooldowns with variance.
-	 * 
-	 * @param milliseconds
-	 *            Duration of the cooldown.
-	 * @param variance
-	 *            Variation in the cooldown duration.
-	 * @return A new cooldown with variance.
+	 * Create a Cooldown configured with a base duration and allowed variance.
+	 *
+	 * @param milliseconds base duration of the cooldown in milliseconds
+	 * @param variance maximum variation of the cooldown duration in milliseconds
+	 * @return the Cooldown configured with the specified base duration and variance
 	 */
 	public static Cooldown getVariableCooldown(final int milliseconds,
 			final int variance) {
@@ -420,16 +422,20 @@ public final class Core {
 	}
 
 	/**
+	 * Retrieves the currently logged-in user.
 	 *
-	 * @return The currently logged-in user.
+	 * @return the currently logged-in User, or `null` if no user is set
 	 */
 	public static User getCurrentUser() {
 		return currentUser;
 	}
 
 	/**
+	 * Sets the application-wide current user.
 	 *
-	 * @param user The user to set as the current user.
+	 * If {@code user} is {@code null}, the current user is cleared (no user is logged in).
+	 *
+	 * @param user the User to set as the current logged-in user, or {@code null} to clear it
 	 */
 	public static void setCurrentUser(final User user) {
 		currentUser = user;

@@ -11,6 +11,11 @@ public class UserManager {
     private Map<String, User> users;
     private static final Logger logger = Logger.getLogger(UserManager.class.getSimpleName());
 
+    /**
+     * Initializes the UserManager singleton by loading persisted user data into the internal map.
+     *
+     * <p>If persisted data cannot be read, initializes an empty user map so the manager remains usable.</p>
+     */
     private UserManager() {
         try {
             users = FileManager.getInstance().loadUsers();
@@ -23,6 +28,11 @@ public class UserManager {
         }
     }
 
+    /**
+     * Get the singleton UserManager instance.
+     *
+     * @return the singleton UserManager instance
+     */
     public static UserManager getInstance() {
         if (instance == null) {
             instance = new UserManager();
@@ -30,6 +40,13 @@ public class UserManager {
         return instance;
     }
 
+    /**
+     * Authenticate a user by username and password, auto-registering a new account if the username does not exist.
+     *
+     * @param username the username to authenticate or register
+     * @param password the password to verify for an existing user or assign to a newly registered user
+     * @return the authenticated or newly registered {@code User} on success, {@code null} on failure
+     */
     public User login(String username, String password) {
         User user = users.get(username);
         if (user == null) {
@@ -54,6 +71,13 @@ public class UserManager {
         }
     }
 
+    /**
+     * Register a new user with the given username and password, initialize their achievements to false, and persist the updated user list.
+     *
+     * If a user with the same username already exists the method returns `false`. If persistence fails after adding the user, the in-memory addition is reverted and the method returns `false`.
+     *
+     * @return `true` if the user was created and saved successfully, `false` otherwise.
+     */
     public boolean register(String username, String password) {
         if (users.containsKey(username)) {
             logger.warning("Registration failed for user '" + username + "': User already exists.");
@@ -78,6 +102,11 @@ public class UserManager {
         }
     }
 
+    /**
+     * Get the internal map of users managed by this singleton.
+     *
+     * @return the live Map from username to User; modifying the returned map will modify the manager's internal state
+     */
     public Map<String, User> getUsers() {
         return users;
     }
