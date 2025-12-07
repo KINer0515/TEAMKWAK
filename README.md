@@ -10,7 +10,7 @@ Sprint progress and task tracking are managed through **Jira**.
 ## ⚙️ Development Workflow
 
 - **Version Control:** Gitflow branching strategy
-    - `main` – stable releases
+    - `master` – stable releases
     - `develop` – integration branch
     - `feature/*` – individual feature branches
 
@@ -25,7 +25,7 @@ Sprint progress and task tracking are managed through **Jira**.
 
 ### 1. Single / Multi Mode Selection
 - Implement mode selection screen
-- Add **Single Mode** and **Multiplayer Mode** logic
+- Separate **1P Mode** and **2P Mode**
 
 ---
 
@@ -53,6 +53,7 @@ Sprint progress and task tracking are managed through **Jira**.
 ### 5. Login System
 - Create login window
 - Save and load user account information
+- Link scores and achievements to User ID
 
 ---
 
