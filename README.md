@@ -67,10 +67,11 @@ Sprint progress and task tracking are managed through **Jira**.
 
 ### 7. Infinite Mode
 - Enemy HP increases over time
-- Add **mode selection screen** (Single / Infinite)
+- Add **Infinite mode selection screen**
 - Introduce **varied or randomized formations**
 - Spawn **bosses periodically**
-- Implement **infinite mode ranking/record system**
+- Implement **infinite mode record system**
+- Implement functions to **open and close the shop on demand**
 
 ---
 
