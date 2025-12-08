@@ -21,4 +21,4 @@ ENV JAVA_SERVER_URL=http://host.docker.internal:8000
 # Entry point
 CMD ["python", "run_server.py"]
 
-#build: docker build -t teamkwak-rl-ai ./rl
+#build: "docker build -t teamkwak-rl-ai ./rl" in cmd on TEAMKWAK directory

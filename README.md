@@ -78,11 +78,14 @@ Sprint progress and task tracking are managed through **Jira**.
 #### 🧠 API Specification (to be defined first)
 - **Action:** move up, down, left, right, shoot
 - **State:**
-    - Player ship (x, y, cooldown, speed)
-    - Enemy ships and bullets
-    - Items
-    - Player bullets (x, y, penetration count)
+    - Frame
+    - AI ship (x, y, cooldown)
+    - bullets (x, y, id)
+    - Enemy ships (x, y, hp, type)
+    - Items (x, y, type)
+    - Boss (x, y, hp, max hp)
     - Score
+    - Enemy Damage Events (enemy id, damage)
 
 #### ☕ Java Side
 - Implement **HTTP communication module**
@@ -98,6 +101,33 @@ Sprint progress and task tracking are managed through **Jira**.
 
 ### 9. Balance Adjustment (optional)
 - Tune enemy stats, item effects, and difficulty scaling
+
+---
+
+## ▶️ How to Run
+
+### 1️⃣ Run the Java Game
+
+```bash
+./gradlew run
+```
+
+### 2️⃣️ Run the AI Client (Docker)
+_No Python installation is required._
+> **Note:** Run the following commands in a terminal opened inside the `TEAMKAWK` directory.
+
+**Build the docker image:**
+```bash 
+docker build -t teamkwak-rl-ai ./rl
+```
+
+**Run the AI client:**
+```bash 
+docker run --rm --network="host" teamkwak-rl-ai
+```
+
+### 3️⃣ Launch the Game at Once (Recommened)
+- Double-click **run_game_with_docker_ai.bat** file to start both the game and the AI client
 
 ---
 
