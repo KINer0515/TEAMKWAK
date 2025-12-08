@@ -54,6 +54,7 @@ Sprint progress and task tracking are managed through **Jira**.
 - Create login window
 - Save and load user account information
 - Link scores and achievements to User ID
+  - HighScoreScreen displays only 1P Mode scores
 
 ---
 
