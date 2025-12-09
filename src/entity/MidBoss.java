@@ -61,4 +61,9 @@ public abstract class MidBoss extends Entity implements BossEntity {
 	public final void attach(final Screen newScreen) {
 		screen = newScreen;
 	}
+
+    public void setHealth(int health) {
+        this.healPoint = health;
+        this.maxHp = health;
+    }
 }

@@ -103,7 +103,7 @@ public class CollisionManager {
                                 this.context.setShipsDestroyed(this.context.getShipsDestroyed() + 1);
                                 String enemyType = enemyShip.getEnemyType();
                                 this.context.getEnemyShipFormation().destroy(enemyShip);
-                                AchievementManager.getInstance().onEnemyDefeated();
+                                AchievementManager.getInstance().checkKillAchievements(this.context.getGameState());
                                 if (enemyType != null && this.context.getCurrentLevel() != null && this.context.getCurrentLevel().getItemDrops() != null) {
                                     List<engine.level.ItemDrop> potentialDrops = new ArrayList<>();
                                     for (engine.level.ItemDrop itemDrop : this.context.getCurrentLevel().getItemDrops()) {
@@ -156,11 +156,11 @@ public class CollisionManager {
                                 this.context.addPointsFor(bullet, pts);
                                 this.context.setCoin(this.context.getCoin() + (pts / 10));
                                 this.context.setShipsDestroyed(this.context.getShipsDestroyed() + 1);
-                                AchievementManager.getInstance().onEnemyDefeated();
+                                AchievementManager.getInstance().checkKillAchievements(this.context.getGameState());
                                 this.context.getLogger().info("Infinite enemy destroyed! Points: " + pts);
 
                                 // inf mode item drop
-                                if (Math.random() < 0.2) {
+                                if (Math.random() < 0.15) {
                                     DropItem.ItemType droppedType = DropItem.ItemType.selectItemType();
                                     if (droppedType != null) {
                                         final int ITEM_DROP_SPEED = 2;
@@ -429,6 +429,7 @@ public class CollisionManager {
                                 }
                             }
                             this.context.addPointsFor(null, pts);
+                            this.context.setCoin(this.context.getCoin() + (pts / 10));
                             break;
                         case Slow:
                             if (this.context.getEnemyShipFormation() != null) {
@@ -479,6 +480,7 @@ public class CollisionManager {
                                 }
                             }
                             this.context.addPointsFor(null, pts2);
+                            this.context.setCoin(this.context.getCoin() + (pts2 / 10));
                             break;
                         case Slow:
                             if (this.context.getEnemyShipFormation() != null) {

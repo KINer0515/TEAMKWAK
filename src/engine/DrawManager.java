@@ -374,6 +374,7 @@ public final class DrawManager {
 	public void drawModeSelect(final Screen screen, final int option) {
 		String playString1 = "1P Mode";
 		String playString2 = "2P Mode";
+        String AIMode = "AI Mode";
 		String playStringInfinite = "Infinite Mode";
 		String backString = "Back";
 
@@ -393,9 +394,13 @@ public final class DrawManager {
 		else backBufferGraphics.setColor(Color.WHITE);
 		drawCenteredRegularString(screen, playStringInfinite, screen.getHeight() / 3 * 2 + fontRegularMetrics.getHeight() * 2);
 
+        if (option == 5) backBufferGraphics.setColor(pulseColor);
+        else backBufferGraphics.setColor(Color.WHITE);
+        drawCenteredRegularString(screen, AIMode, screen.getHeight() / 3 * 2 + fontRegularMetrics.getHeight() * 3);
+
 		if (option == 1) backBufferGraphics.setColor(pulseColor);
 		else backBufferGraphics.setColor(Color.WHITE);
-		drawCenteredRegularString(screen, backString, screen.getHeight() / 3 * 2 + fontRegularMetrics.getHeight() * 3);
+		drawCenteredRegularString(screen, backString, screen.getHeight() / 3 * 2 + fontRegularMetrics.getHeight() * 4);
 	}
 
 	/**
@@ -685,13 +690,64 @@ public final class DrawManager {
 			}
 		}
 	}
+	
+		/**
+		 * Draws the login screen.
+		 *
+		 * @param screen         The screen to draw on.
+		 * @param username       The current username text.
+		 * @param password       The current password text.
+		 * @param selectedField  The currently selected UI element.
+		 */
+		public void drawLoginScreen(final Screen screen, final String username, final String password, final int selectedField, final String errorMessage) {
+			// Title
+			drawCenteredBigString(screen, "LOGIN", screen.getHeight() / 4);
+	
+			int yPos = screen.getHeight() / 2 - 50;
+			int lineHeight = 35; // A fixed value for line height and padding
+	
+			// Username field
+			if (selectedField == 0) {
+				backBufferGraphics.setColor(Color.GREEN);
+			} else {
+				backBufferGraphics.setColor(Color.WHITE);
+			}
+			drawCenteredRegularString(screen, "Username:", yPos);
+			drawCenteredRegularString(screen, username.isEmpty() ? "_______" : username, yPos + lineHeight);
+	
+			// Password field
+			yPos += lineHeight * 2;
+			if (selectedField == 1) {
+				backBufferGraphics.setColor(Color.GREEN);
+			} else {
+				backBufferGraphics.setColor(Color.WHITE);
+			}
+			drawCenteredRegularString(screen, "Password:", yPos);
+			String maskedPassword = new String(new char[password.length()]).replace('\0', '*');
+			drawCenteredRegularString(screen, maskedPassword.isEmpty() ? "_______" : maskedPassword, yPos + lineHeight);
+	
+			// Login button
+			yPos += lineHeight * 2;
+			if (selectedField == 2) {
+				backBufferGraphics.setColor(Color.GREEN);
+			} else {
+				backBufferGraphics.setColor(Color.WHITE);
+			}
+			drawCenteredRegularString(screen, "LOGIN", yPos);
 
-	/**
-	 * Draws purchase feedback message.
-	 */
-	public void drawShopFeedback(final Screen screen, final String message) {
-		int popupWidth = 300;
-		int popupHeight = 50;
+			// Draw error message if present
+			if (errorMessage != null) {
+				backBufferGraphics.setColor(Color.RED);
+				drawCenteredRegularString(screen, errorMessage, screen.getHeight() - 100);
+			}
+		}
+	
+		/**
+		 * Draws purchase feedback message.
+		 */
+		public void drawShopFeedback(final Screen screen, final String message) {
+			int popupWidth = 300;
+			int popupHeight = 50;
 		int x = screen.getWidth() / 2 - popupWidth / 2;
 		int y = 70;
 

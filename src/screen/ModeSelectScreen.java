@@ -19,6 +19,8 @@ public class ModeSelectScreen extends Screen {
     /** Animated background. */
     private AnimatedBackground animatedBackground;
 
+    private Cooldown feedbackCooldown;
+
     /**
      * Constructor, establishes the properties of the screen.
      *
@@ -33,9 +35,16 @@ public class ModeSelectScreen extends Screen {
         super(width, height, fps);
 
         // Defaults to 1P mode.
+        // returnCode
+        // 1: Back
+        // 2: 1P Mode
+        // 7: 2P Mode
+        // 5: AI Mode
         this.returnCode = 2;
         this.selectionCooldown = Core.getCooldown(SELECTION_TIME);
         this.selectionCooldown.reset();
+
+        this.feedbackCooldown = Core.getCooldown(2000);
         this.animatedBackground = new AnimatedBackground(width, height);
     }
 
@@ -51,7 +60,12 @@ public class ModeSelectScreen extends Screen {
     }
 
     /**
-     * Updates the elements on screen and checks for events.
+     * Updates visual state, renders the screen, and handles menu navigation input.
+     *
+     * Updates the animated background and redraws the screen, then—if the selection
+     * cooldown and input delay have finished—processes keyboard input:
+     * UP or W selects the previous menu item, DOWN or S selects the next menu item,
+     * and SPACE stops the screen run loop.
      */
     protected final void update() {
         super.update();
@@ -71,7 +85,7 @@ public class ModeSelectScreen extends Screen {
                 this.selectionCooldown.reset();
             }
             if (inputManager.isKeyDown(KeyEvent.VK_SPACE)) {
-                this.isRunning = false;
+                    this.isRunning = false;
             }
         }
     }
@@ -84,9 +98,11 @@ public class ModeSelectScreen extends Screen {
         if (this.returnCode == 2)
             this.returnCode = 7;
         else if (this.returnCode == 7)
-            this.returnCode = 9; // Return to title screen
+            this.returnCode = 9;
         else if (this.returnCode == 9)
-            this.returnCode = 1;
+            this.returnCode = 5;
+        else if (this.returnCode == 5)
+            this.returnCode = 1; // Return to title screen
         else if (this.returnCode == 1)
             this.returnCode = 2;
         this.animatedBackground.rotateRight();
@@ -100,6 +116,8 @@ public class ModeSelectScreen extends Screen {
         if (this.returnCode == 2)
             this.returnCode = 1; // Return to title screen
         else if (this.returnCode == 1)
+            this.returnCode = 5;
+        else if (this.returnCode == 5)
             this.returnCode = 9;
         else if (this.returnCode == 9)
             this.returnCode = 7;
@@ -116,6 +134,10 @@ public class ModeSelectScreen extends Screen {
 
         this.animatedBackground.draw(drawManager, this);
         drawManager.drawModeSelect(this, this.returnCode);
+
+        if (!feedbackCooldown.checkFinished()) {
+            drawManager.drawShopFeedback(this, "AI Mode Coming Soon");
+        }
 
         drawManager.completeDrawing(this);
     }

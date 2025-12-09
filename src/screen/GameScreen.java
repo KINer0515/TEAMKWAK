@@ -1,14 +1,16 @@
 package screen;
 
-import java.awt.Color;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Logger;
-
 import engine.*;
+import engine.dto.StatePacket;
+import engine.level.Level;
 import entity.*;
 
-import engine.level.Level;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
 
 /**
@@ -92,7 +94,7 @@ public class GameScreen extends Screen implements CollisionContext {
 	private boolean levelFinished;
 	/** Checks if a bonus life is received. */
 	private boolean bonusLife;
-  /** Maximum number of lives. */
+    /** Maximum number of lives. */
 	private int maxLives;
 	/** Current coin. */
 	private int coin;
@@ -117,27 +119,37 @@ public class GameScreen extends Screen implements CollisionContext {
     /** bossBullets carry bullets which Boss fires */
 	private Set<BossBullet> bossBullets;
 	/** Is the bullet on the screen erased */
-  private boolean is_cleared = false;
-  /** Timer to track elapsed time. */
-  private GameTimer gameTimer;
-  /** Elapsed time since the game started. */
-  private long elapsedTime;
-  // Achievement popup
-  private String achievementText;
-  private Cooldown achievementPopupCooldown;
-  private enum StagePhase{wave, boss_wave};
-  private StagePhase currentPhase;
-  /** Health change popup. */
-  private String healthPopupText;
-  private Cooldown healthPopupCooldown;
+    private boolean is_cleared = false;
+    /** Timer to track elapsed time. */
+    private GameTimer gameTimer;
+    /** Elapsed time since the game started. */
+    private long elapsedTime;
+    // Achievement popup
+    private String achievementText;
+    private Cooldown achievementPopupCooldown;
+    private enum StagePhase{wave, boss_wave};
+    private StagePhase currentPhase;
+    /** Health change popup. */
+    private String healthPopupText;
+    private Cooldown healthPopupCooldown;
 
-	    private GameState gameState;
+    private GameState gameState;
 
-	    /**
-	     * Constructor, establishes the properties of the screen.
-	     *
-	     * @param gameState
-	     *            Current game state.	 * @param level
+    // === External control state for HTTP/AI controller (Player 1) ===
+    /** Whether external control is enabled for player 1. */
+    private boolean isAIMode = false;
+    /** Latest external horizontal movement (-1: left, 0: none, 1: right). */
+    private int externalMoveX = 0;
+    /** Latest external vertical movement (-1: up, 0: none, 1: down). */
+    private int externalMoveY = 0;
+    /** Latest external shooting flag. */
+    private boolean externalShoot = false;
+
+    /**
+     * Constructor, establishes the properties of the screen.
+     *
+     * @param gameState
+     *            Current game state.	 * @param level
 	 *            Current level settings.
 	 * @param bonusLife
 	 *            Checks if a bonus life is awarded this level.
@@ -159,19 +171,25 @@ public class GameScreen extends Screen implements CollisionContext {
 		this.bonusLife = bonusLife;
         this.currentlevel = level;
         this.maxLives = maxLives;
-		        this.level = gameState.getLevel();
-		        this.score = gameState.getScore();
-                this.coin = gameState.getCoin();
-		        this.livesP1 = gameState.getLivesRemaining();
-				this.livesP2 = gameState.getLivesRemainingP2();
-		        this.gameState = gameState;
-				if (this.bonusLife) {
-					this.livesP1++;
-					this.livesP2++;
-				}
+		this.level = gameState.getLevel();
+		this.score = gameState.getScore();
+		this.scoreP1 = gameState.getScoreP1();
+		if (gameState.isTwoPlayerMode())
+			this.scoreP2 = gameState.getScoreP2();
+		else
+			this.scoreP2 = 0;
+        this.coin = gameState.getCoin();
+	    this.livesP1 = gameState.getLivesRemaining();
+		this.livesP2 = gameState.getLivesRemainingP2();
+		this.gameState = gameState;
+		if (this.bonusLife) {
+			this.livesP1++;
+			this.livesP2++;
+		}
 		this.bulletsShot = gameState.getBulletsShot();
 		this.shipsDestroyed = gameState.getShipsDestroyed();
 		this.isTwoPlayerMode = gameState.isTwoPlayerMode();
+        this.isAIMode = gameState.isAIMode();
 	}
 
 	/**
@@ -193,6 +211,8 @@ public class GameScreen extends Screen implements CollisionContext {
 			this.shipP2 = new Ship(this.width / 2 + 100, ITEMS_SEPARATION_LINE_HEIGHT - 20, Color.pink);
 			this.shipP2.setPlayerId(2); // === [ADD] Player2 ===
 		}
+//		this.scoreP1 = gameState.getScoreP1();
+//		this.scoreP2 = gameState.getScoreP2();
         // special enemy initial
 		enemyShipSpecialFormation = new EnemyShipSpecialFormation(this.currentLevel,
 				Core.getVariableCooldown(BONUS_SHIP_INTERVAL, BONUS_SHIP_VARIANCE),
@@ -225,11 +245,13 @@ public class GameScreen extends Screen implements CollisionContext {
 	public final int run() {
 		super.run();
 
+		this.scoreP1 += LIFE_SCORE * (this.livesP1 - 1);
 		this.score += LIFE_SCORE * (this.livesP1 - 1);
 		if(this.isTwoPlayerMode) {
+			this.scoreP2 += LIFE_SCORE * (this.livesP2 - 1);
 			this.score += LIFE_SCORE * (this.livesP2 - 1);
 		}
-		this.logger.info("Screen cleared with a score of " + this.score);
+		this.logger.info("@@Screen cleared with a score of " + this.scoreP1 + ",2p :" + this.scoreP2 + ", total :" + this.score);
 
 		return this.returnCode;
 	}
@@ -252,6 +274,13 @@ public class GameScreen extends Screen implements CollisionContext {
 				boolean p1Up    = inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_W);
 				boolean p1Down  = inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_S);
 				boolean p1Fire  = inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_SPACE);
+				if (!this.isTwoPlayerMode) {
+					p1Right = inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_D) || inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_RIGHT);
+					p1Left  = inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_A) || inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_LEFT);
+					p1Up    = inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_W) || inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_UP);
+					p1Down  = inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_S) || inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_DOWN);
+					p1Fire  = inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_SPACE) || inputManager.isP1KeyDown(java.awt.event.KeyEvent.VK_ENTER);
+				}
 
 				boolean isRightBorder = this.ship.getPositionX()
 						+ this.ship.getWidth() + this.ship.getSpeed() > this.width - 1;
@@ -268,17 +297,37 @@ public class GameScreen extends Screen implements CollisionContext {
 				if (p1Fire) {
 					if (this.ship.shoot(this.bullets)) {
 						this.bulletsShot++;
-						AchievementManager.getInstance().onShotFired();
 					}
 				}
 			}
 
 			if (this.isTwoPlayerMode && this.shipP2 != null && this.livesP2 > 0 && !this.shipP2.isDestroyed()) {
-				boolean p2Right = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_RIGHT);
-				boolean p2Left  = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_LEFT);
-				boolean p2Up    = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_UP);
-				boolean p2Down  = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_DOWN);
-				boolean p2Fire  = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_ENTER);
+				boolean p2Right = false;
+				boolean p2Left  = false;
+				boolean p2Up    = false;
+				boolean p2Down  = false;
+				boolean p2Fire  = false;
+
+                if (this.isAIMode) {
+                    if (externalMoveX == 1) {
+                        p2Right = true;
+                    } else if (externalMoveX == -1) {
+                        p2Left = true;
+                    }
+                    if (externalMoveY == 1) {
+                        p2Down = true;
+                    } else if (externalMoveY == -1) {
+                        p2Up = true;
+                    }
+                    p2Fire = externalShoot;
+                }
+                else {
+                    p2Right = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_RIGHT);
+                    p2Left  = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_LEFT);
+                    p2Up    = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_UP);
+                    p2Down  = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_DOWN);
+                    p2Fire  = inputManager.isP2KeyDown(java.awt.event.KeyEvent.VK_ENTER);
+                }
 
 				boolean p2RightBorder = this.shipP2.getPositionX()
 						+ this.shipP2.getWidth() + this.shipP2.getSpeed() > this.width - 1;
@@ -295,7 +344,6 @@ public class GameScreen extends Screen implements CollisionContext {
 				if (p2Fire) {
 					if (this.shipP2.shoot(this.bullets)) {
 						this.bulletsShot++;
-						AchievementManager.getInstance().onShotFired();
 					}
 				}
 			}
@@ -354,6 +402,18 @@ public class GameScreen extends Screen implements CollisionContext {
         collisionManager.manageCollisions();
 		cleanBullets();
 		draw();
+
+        if (Core.isAITraining && this.livesP2 <= 0 && !this.levelFinished) {
+
+            // Core 루프 종료 위해 P1도 0으로 만들어준다
+            this.livesP1 = 0;
+
+            this.levelFinished = true;
+            this.screenFinishedCooldown.reset();
+            if (this.gameTimer.isRunning()) {
+                this.gameTimer.stop();
+            }
+        }
 
 		if ((this.livesP1 == 0 && (!this.isTwoPlayerMode || this.livesP2 == 0)) && !this.levelFinished) {
 			this.levelFinished = true;
@@ -520,7 +580,6 @@ public class GameScreen extends Screen implements CollisionContext {
         this.dropItems.removeAll(recyclable);
         ItemPool.recycle(recyclable);
     }
-
     /**
      * Shows an achievement popup message on the HUD.
      *
@@ -555,8 +614,8 @@ public class GameScreen extends Screen implements CollisionContext {
 	        if (this.coin > 2000) {
 	            AchievementManager.getInstance().unlockAchievement("Mr. Greedy");
 	        }
-	        return new GameState(this.level, this.score, this.livesP1,this.livesP2,
-	                this.bulletsShot, this.shipsDestroyed,this.coin, this.isTwoPlayerMode);
+	        return new GameState(this.level, this.score, this.scoreP1,this.scoreP2,this.livesP1,this.livesP2,
+	                this.bulletsShot, this.shipsDestroyed,this.coin, this.isTwoPlayerMode, this.isAIMode);
 	    }
 	/**
 	 * Adds one life to the player.
@@ -652,6 +711,126 @@ public class GameScreen extends Screen implements CollisionContext {
             return new Color(0xF44336); // Red: Critical HP
         }
     }
+    /**
+     * Updates external control input for player 1.
+     * This method is called from Core via HTTP API.
+     *
+     * @param moveX Horizontal movement axis (-1, 0, 1).
+     * @param moveY Vertical movement axis (-1, 0, 1).
+     * @param shoot Whether the player should shoot.
+     */
+    public void handleExternalAction(final int moveX, final int moveY, final boolean shoot) {
+        this.externalMoveX = moveX;
+        this.externalMoveY = moveY;
+        this.externalShoot = shoot;
+    }
+
+    public void setAImode(final boolean aimode) {
+        isAIMode = aimode;
+    }
+
+    // === Enemy damage buffer for RL ===
+    private final List<List<Integer>> enemyDamageEvents = new ArrayList<>();
+
+    public void recordEnemyDamage(int enemyId, int damage) {
+        List<Integer> ev = new ArrayList<>();
+        ev.add(enemyId);
+        ev.add(damage);
+        enemyDamageEvents.add(ev);
+    }
+
+
+    public StatePacket buildStatePacket() {
+        StatePacket packet = new StatePacket();
+
+        // 1. Frame index
+        packet.frame = (int)(System.currentTimeMillis() / 16);  // 대략 60fps 기준
+
+        // 2. Player info
+        if (this.shipP2 != null) {
+            packet.playerX = this.shipP2.getPositionX();
+            packet.playerY = this.shipP2.getPositionY();
+            packet.playerHp = this.livesP2;
+        } else {
+            // fallback or safe default
+            packet.playerX = -1;
+            packet.playerY = -1;
+            packet.playerHp = 0;
+        }
+
+        // 3. Bullets info
+        packet.bullets = new ArrayList<>();
+        for (Bullet b : this.bullets) {
+            List<Integer> bullet_info = new ArrayList<>();
+            bullet_info.add(b.getPositionX());
+            bullet_info.add(b.getPositionY());
+            bullet_info.add(b.getOwnerId());
+            packet.bullets.add(bullet_info);
+        }
+        for (BossBullet b : this.bossBullets) {
+            List<Integer> bullet_info = new ArrayList<>();
+            bullet_info.add(b.getPositionX());
+            bullet_info.add(b.getPositionY());
+            bullet_info.add(-1);
+            packet.bullets.add(bullet_info);
+        }
+
+
+        // 4. Enemies info
+        packet.enemies = new ArrayList<>();
+        for (EnemyShip e : this.enemyShipFormation) {
+            if (!e.isDestroyed()) {
+                List<Integer> enemy_info = new ArrayList<>();
+                enemy_info.add(e.getPositionX());
+                enemy_info.add(e.getPositionY());
+                enemy_info.add(e.getHealth());
+                int enemy_ship_type = switch (e.getEnemyType()) {
+                    case "enemyA" -> 1;
+                    case "enemyB" -> 2;
+                    case "enemyC" -> 3;
+                    default -> 0;
+                };
+                enemy_info.add(enemy_ship_type);
+                packet.enemies.add(enemy_info);
+            }
+        }
+        if (this.finalBoss != null && !this.finalBoss.isDestroyed()) {
+            List<Integer> enemy_info = new ArrayList<>();
+            enemy_info.add(finalBoss.getPositionX());
+            enemy_info.add(finalBoss.getPositionY());
+            enemy_info.add(finalBoss.getHealPoint());
+            int enemy_ship_type = 1;
+            enemy_info.add(enemy_ship_type);
+            packet.enemies.add(enemy_info);
+        }if (this.omegaBoss != null && !this.omegaBoss.isDestroyed()) {
+            List<Integer> enemy_info = new ArrayList<>();
+            enemy_info.add(omegaBoss.getPositionX());
+            enemy_info.add(omegaBoss.getPositionY());
+            enemy_info.add(omegaBoss.getHealPoint());
+            int enemy_ship_type = 1;
+            enemy_info.add(enemy_ship_type);
+            packet.enemies.add(enemy_info);
+        }
+
+        // 5. Items info
+        packet.items = new ArrayList<>();
+        for (DropItem d : this.dropItems) {
+            List<String> item_info = new ArrayList<>();
+            item_info.add(String.valueOf(d.getPositionX()));
+            item_info.add(String.valueOf(d.getPositionY()));
+            item_info.add(d.getItemType().toString());
+            packet.items.add(item_info);
+        }
+
+        // 6. Score
+        packet.score = this.scoreP2;
+
+        // === 7. Enemy Damage Events ===
+        packet.enemyDamageEvents = new ArrayList<>(enemyDamageEvents);
+        enemyDamageEvents.clear();
+
+        return packet;
+    }
 
     // Getters and Setters for CollisionManager
 	@Override
@@ -679,4 +858,14 @@ public class GameScreen extends Screen implements CollisionContext {
     public EnemyShipSpecialFormation getEnemyShipSpecialFormation() { return this.enemyShipSpecialFormation; }
     public MidBoss getOmegaBoss() { return this.omegaBoss; }
     public FinalBoss getFinalBoss() { return this.finalBoss; }
+
+
+    //Setters for Testing
+    public void setShipP2(Ship shipP2) { this.shipP2 = shipP2; }
+    public void setBullets(Set<Bullet> bullets) { this.bullets = bullets; }
+    public void setDropItems(Set<DropItem> dropItems) { this.dropItems = dropItems; }
+    public void setBossBullets(Set<BossBullet> bullets) { this.bossBullets = bullets; }
+    public void setEnemyShipFormation(EnemyShipFormation enemyShipFormation) {this.enemyShipFormation = enemyShipFormation; };
+    public void setFinalBoss(FinalBoss finalBoss) { this.finalBoss = finalBoss; };
+    public void setScoreP2(int scoreP2) { this.scoreP2 = scoreP2; }
 }

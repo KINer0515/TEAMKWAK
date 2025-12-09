@@ -13,8 +13,8 @@ import engine.DrawManager.SpriteType;
  * 
  */
 public class Bullet extends Entity {
-    // === [ADD] Owner flag: 1 = P1, 2 = P2, null for legacy compatibility ===
-    private Integer ownerId;
+    // === [ADD] Owner flag: 1 = P1, 2 = P2, 0 = enemy (default) ===
+    private Integer ownerId = 0;
 
     public Integer getOwnerId() { return ownerId; }
     public void setOwnerId(Integer ownerId) { this.ownerId = ownerId; }
@@ -57,14 +57,23 @@ public class Bullet extends Entity {
 	/**
 	 * Sets correct sprite for the bullet, based on speed.
 	 */
-	public final void setSprite() {
-		if (speed < 0)
-			this.spriteType = SpriteType.Bullet;
-		else
-			this.spriteType = SpriteType.EnemyBullet;
-	}
+    public final void setSprite() {
+        if (ownerId != null && ownerId == 2) {
+            this.spriteType = SpriteType.Bullet;
+        } else if (ownerId != null && ownerId == 1) {
+            this.spriteType = SpriteType.Bullet;
+        } else if (ownerId != null && ownerId == -1) {
+            this.spriteType = SpriteType.EnemyBullet;
+        } else {
+            if (speed < 0)
+                this.spriteType = SpriteType.Bullet;
+            else
+                this.spriteType = SpriteType.EnemyBullet;
+        }
+    }
 
-	/**
+
+    /**
 	 * Updates the bullet's position.
 	 */
 	public final void update() {

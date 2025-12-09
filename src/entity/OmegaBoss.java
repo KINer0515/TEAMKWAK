@@ -157,4 +157,14 @@ public class OmegaBoss extends MidBoss {
 	public void draw(DrawManager drawManager) {
 		drawManager.drawEntity(this, this.positionX, this.positionY);
 	}
+
+    /**
+     * Sets the boss's health and max health.
+     * Used for difficulty scaling in Infinite Mode.
+     * * @param health New health value
+     */
+    public void setHealth(int health) {
+        this.healPoint = health;
+        this.maxHp = health;
+    }
 }

@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "username": "test",
+      "password": "1234",
+      "achievements": {
+        "First Blood": false,
+        "Bad Sniper": false,
+        "Beginner": false,
+        "Bear Grylls": false,
+        "Intermediate": false,
+        "Conqueror": false,
+        "Mr. Greedy": false,
+        "Boss Slayer": false
+      }
+    }
+  ]
+}

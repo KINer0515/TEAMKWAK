@@ -35,6 +35,15 @@ public class GameTimer {
         }
     }
 
+    public void resume() {
+        if (!this.running && this.stopTime > 0) {
+            long pausedDuration = this.stopTime - this.startTime;
+            this.startTime = System.nanoTime() - pausedDuration;
+            this.running = true;
+            this.stopTime = 0L;
+        }
+    }
+
     /**
      * @return Elapsed time in milliseconds.
      */

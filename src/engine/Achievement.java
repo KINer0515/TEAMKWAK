@@ -56,4 +56,11 @@ public class Achievement {
     public void unlock() {
         this.unlocked = true;
     }
+
+    /**
+     * Locks the achievement.
+     */
+    public void lock() {
+        this.unlocked = false;
+    }
 }

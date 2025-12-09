@@ -40,7 +40,7 @@ public class InfiniteEnemyShip extends Entity {
     private static final double STRAIGHT_SPEED_Y = 4.0;
     private static final double ZIGZAG_SPEED_X = 3.0;
     private static final double ZIGZAG_SPEED_Y = 2.5;
-    private static final double HORIZONTAL_SPEED_X = 5.0;
+    private static final double HORIZONTAL_SPEED_X = 4.5;
 
     /** Point value when destroyed */
     private int pointValue;
@@ -51,6 +51,12 @@ public class InfiniteEnemyShip extends Entity {
     /** Health points */
     private int hp;
     private int maxHp;
+
+    private Color baseColor;
+
+    private static final int SHOOTING_INTERVAL = 1500;
+
+    private Cooldown shootingCooldown;
 
     /** Animation cooldown */
     private Cooldown animationCooldown;
@@ -82,6 +88,9 @@ public class InfiniteEnemyShip extends Entity {
         this.animationCooldown = Core.getCooldown(500);
         this.explosionCooldown = Core.getCooldown(500);
 
+        this.shootingCooldown = Core.getCooldown(SHOOTING_INTERVAL);
+        this.shootingCooldown.reset();
+
         initializeByPattern();
     }
 
@@ -94,7 +103,8 @@ public class InfiniteEnemyShip extends Entity {
                 this.speedX = 0;
                 this.speedY = STRAIGHT_SPEED_Y;
                 this.spriteType = SpriteType.EnemyShipA1;
-                this.color = Color.GREEN;
+                this.baseColor = Color.BLUE;
+                this.color = this.baseColor;
                 this.pointValue = STRAIGHT_POINT_VALUE;
                 break;
 
@@ -102,7 +112,8 @@ public class InfiniteEnemyShip extends Entity {
                 this.speedX = ZIGZAG_SPEED_X;
                 this.speedY = ZIGZAG_SPEED_Y;
                 this.spriteType = SpriteType.EnemyShipB1;
-                this.color = Color.YELLOW;
+                this.baseColor = Color.YELLOW;
+                this.color = this.baseColor;
                 this.pointValue = ZIGZAG_POINT_VALUE;
                 // Random initial zigzag direction
                 this.zigzagDirection = (Math.random() > 0.5) ? 1 : -1;
@@ -117,7 +128,8 @@ public class InfiniteEnemyShip extends Entity {
                     this.speedX = -HORIZONTAL_SPEED_X; // Spawn right -> move left
                 }
                 this.spriteType = SpriteType.EnemyShipC1;
-                this.color = Color.MAGENTA;
+                this.baseColor = Color.MAGENTA;
+                this.color = this.baseColor;
                 this.pointValue = HORIZONTAL_POINT_VALUE;
                 break;
         }
@@ -129,6 +141,7 @@ public class InfiniteEnemyShip extends Entity {
     public void update() {
         if (isDestroyed) return;
 
+        updateColorBasedOnHealth();
         // Animation update
         updateAnimation();
 
@@ -176,6 +189,27 @@ public class InfiniteEnemyShip extends Entity {
                     break;
             }
         }
+    }
+    private void updateColorBasedOnHealth() {
+        double healthRatio = (double) this.hp / this.maxHp;
+        this.color = adjustColorBrightness(this.baseColor, healthRatio);
+    }
+    private Color adjustColorBrightness(Color baseColor, double healthRatio) {
+        float brightnessFactor = (float) healthRatio;
+
+        int r = baseColor.getRed();
+        int g = baseColor.getGreen();
+        int b = baseColor.getBlue();
+
+        int newR = (int) (r * brightnessFactor + 255 * (1 - brightnessFactor));
+        int newG = (int) (g * brightnessFactor + 255 * (1 - brightnessFactor));
+        int newB = (int) (b * brightnessFactor + 255 * (1 - brightnessFactor));
+
+        newR = Math.min(255, Math.max(0, newR));
+        newG = Math.min(255, Math.max(0, newG));
+        newB = Math.min(255, Math.max(0, newB));
+
+        return new Color(newR, newG, newB);
     }
 
     /**
@@ -259,6 +293,19 @@ public class InfiniteEnemyShip extends Entity {
         }
     }
 
+    public boolean canShoot() {
+        return (!isDestroyed && shootingCooldown.checkFinished());
+    }
+    public void resetShootingCooldown() {
+        shootingCooldown.reset();
+    }
+    public int getShootingPositionX() {
+        return this.positionX + this.width / 2;
+    }
+    public int getShootingPositionY() {
+        return this.positionY + this.height;
+    }
+
     /**
      * Checks if the enemy is destroyed.
      *
@@ -293,15 +340,6 @@ public class InfiniteEnemyShip extends Entity {
      */
     public int getHealth() {
         return this.hp;
-    }
-
-    /**
-     * Gets maximum health.
-     *
-     * @return Max HP
-     */
-    public int getMaxHealth() {
-        return this.maxHp;
     }
 
     /**

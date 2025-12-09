@@ -454,7 +454,7 @@ public class EnemyShipFormation implements Iterable<EnemyShip> {
 		}
 	}
 
-	/**
+    /**
 	 * Destroys a ship.
 	 *
 	 * @param destroyedShip

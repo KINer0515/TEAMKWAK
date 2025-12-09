@@ -12,6 +12,8 @@ public class GameState {
 	private int level;
 	/** Current score. */
 	private int score;
+	private int scoreP1;
+	private int scoreP2;
 	/** Lives currently remaining. */
 	private int livesRemaining;
 	private int livesRemainingP2;
@@ -23,6 +25,8 @@ public class GameState {
     private int coin;
 	/** check 1p or 2p mode. */
 	private boolean isTwoPlayerMode;
+    /** check AI mode or not. */
+    private boolean isAIMode;
 
 
 	/**
@@ -44,19 +48,31 @@ public class GameState {
 	 *            Ships destroyed until now.
 	 * @param isTwoPlayerMode
 	 * 			  check 1p or 2p mode.
+     * @param isAIMode
+     *            check AI mode or not.
 	 */
-	public GameState(final int level, final int score,
+	public GameState(final int level, final int score, final int scoreP1, final int scoreP2,
 			final int livesRemaining,final int livesRemainingP2, final int bulletsShot,
-			final int shipsDestroyed, final int coin, final boolean isTwoPlayerMode) {
+			final int shipsDestroyed, final int coin, final boolean isTwoPlayerMode, final boolean isAIMode) {
 		this.level = level;
 		this.score = score;
+		this.scoreP1 = scoreP1;
+		this.scoreP2 = scoreP2;
 		this.livesRemaining = livesRemaining;
 		this.livesRemainingP2 = livesRemainingP2;
 		this.bulletsShot = bulletsShot;
         this.shipsDestroyed = shipsDestroyed;
         this.coin = coin;
 		this.isTwoPlayerMode = isTwoPlayerMode;
-		    }
+		this.isAIMode = isAIMode;
+	}
+	public GameState(final int level, final int score,
+					 final int livesRemaining, final int livesRemainingP2, final int bulletsShot,
+					 final int shipsDestroyed, final int coin, final boolean isTwoPlayerMode, final boolean isAIMode) {
+		this(level, score, score, 0, livesRemaining, livesRemainingP2,	bulletsShot, shipsDestroyed, coin, isTwoPlayerMode,isAIMode);
+    }
+
+    public final boolean isAIMode() { return isAIMode; }
 
 	public final boolean isTwoPlayerMode() { return isTwoPlayerMode; }
 
@@ -72,6 +88,17 @@ public class GameState {
 	 */
 	public final int getScore() {
 		return score;
+	}
+
+	/**
+	 * @return score
+	 */
+	public final int getScoreP1() {
+		return scoreP1;
+	}
+
+	public final int getScoreP2() {
+		return scoreP2;
 	}
 
 	/**

@@ -5,8 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import engine.DrawManager;
-import engine.Core;
+import engine.*;
 
 /**
  * Manages enemies for Infinite Mode.
@@ -24,6 +23,10 @@ public class InfiniteEnemyFormation implements Iterable<InfiniteEnemyShip> {
     /** Count of destroyed enemies */
     private int destroyedCount;
 
+    private static final int SHOOTING_INTERVAL = 200;
+
+    private Cooldown shootingCooldown;
+
     /**
      * Constructor.
      */
@@ -31,6 +34,8 @@ public class InfiniteEnemyFormation implements Iterable<InfiniteEnemyShip> {
         this.enemies = new ArrayList<>();
         this.drawManager = Core.getDrawManager();
         this.destroyedCount = 0;
+
+        shootingCooldown = Core.getCooldown(SHOOTING_INTERVAL);
     }
 
     /**
@@ -95,8 +100,30 @@ public class InfiniteEnemyFormation implements Iterable<InfiniteEnemyShip> {
      * @param bullets Set to add bullets to
      */
     public void shoot(final Set<Bullet> bullets) {
-        // Optional: Implement enemy shooting
-        // For now, infinite mode enemies don't shoot
+        if (enemies.isEmpty() || !shootingCooldown.checkFinished()) {
+            return;
+        }
+        shootingCooldown.reset();
+
+        List<InfiniteEnemyShip> shooters = new ArrayList<>();
+        for (InfiniteEnemyShip enemy : enemies) {
+            if (enemy.canShoot()) {
+                shooters.add(enemy);
+            }
+        }
+        if (!shooters.isEmpty()) {
+            InfiniteEnemyShip shooter = shooters.get(
+                    (int)(Math.random() * shooters.size())
+            );
+
+            Bullet bullet = BulletPool.getBullet(
+                    shooter.getShootingPositionX(),
+                    shooter.getShootingPositionY(),
+                    5
+            );
+            bullets.add(bullet);
+            shooter.resetShootingCooldown();
+        }
     }
 
     /**

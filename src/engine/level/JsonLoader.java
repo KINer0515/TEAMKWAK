@@ -52,6 +52,20 @@ public class JsonLoader {
         }
     }
 
+    /**
+     * Public entry point to parse a generic JSON string into a Map.
+     * @param jsonContent The raw string content of the JSON file.
+     * @return A map representing the JSON object.
+     * @throws IOException if parsing fails.
+     */
+    public static Map<String, Object> parseGeneric(String jsonContent) throws IOException {
+        try {
+            return (Map<String, Object>) new JsonLoader(jsonContent).parseValue();
+        } catch (Exception e) {
+            throw new IOException("Failed to parse generic JSON: " + e.getMessage(), e);
+        }
+    }
+
     private char next() {
         if (++at >= json.length()) {
             ch = '\0'; // End of file

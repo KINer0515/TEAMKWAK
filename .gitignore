@@ -175,10 +175,10 @@ out/
 .gradle/
 build/
 
-##############
-# local-only
-##############
-gradle.properties
+###############
+## Python venv
+###############
+.venv/
 
 #############
 ## Custom
@@ -186,7 +186,9 @@ gradle.properties
 *.log
 log*/
 log*
+*.ttf
 .checkstyle
 production
 achievements.dat
-
+!LoginScreenTest.java
+!LoginScreen.java

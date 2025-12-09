@@ -1,0 +1,60 @@
+name: Java CI/CD with Gradle
+
+# 언제 실행할지 정의 (main 브랜치에 푸시하거나 PR을 보낼 때)
+# Define triggers (Run on push or PR to main/develop branches)
+on:
+  push:
+    branches: [ "master", "develop" ]
+  pull_request:
+    branches: [ "master", "develop" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # Run on Ubuntu Linux
+
+    steps:
+      # 1. 코드를 가져옵니다.
+      # 1. Checkout the source code
+      - uses: actions/checkout@v4
+
+      # 2. Java 21 환경을 설정합니다. (아까 오류 해결할 때 Java 21이었으므로 21로 설정)
+      # 2. Set up JDK 21 environment
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 3. Gradle 설정을 로드합니다. (캐싱 등 자동 처리)
+      # 3. Setup Gradle (Handles caching automatically)
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      # 4. gradlew 실행 권한 부여 (윈도우에서 커밋한 경우 권한이 없을 수 있음)
+      # 4. Grant execute permission for gradlew (Required if committed from Windows)
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # [CI 파트] 5. 테스트를 실행합니다. (실패하면 여기서 멈춤)
+      # [CI Part] 5. Run tests (Workflow stops here if tests fail)
+      - name: Run Tests
+        run: ./gradlew test
+
+      # [CD 파트] 6. 테스트가 통과하면 빌드(jar 파일 생성)를 수행합니다.
+      # [CD Part] 6. Build the project (Create jar file) if tests pass
+      - name: Build with Gradle
+        run: ./gradlew build -x test # 테스트는 위에서 했으니 건너뜀
+
+      # [CD 파트] 7. 빌드된 jar 파일을 GitHub Artifact에 업로드합니다.
+      # 팀원들이 GitHub Actions 탭에서 다운로드 받을 수 있게 됩니다.
+        # [CD Part] 7. Upload the built jar file to GitHub Artifacts
+        # Allows team members to download the build from the GitHub Actions tab
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpaceInvaders-Build
+          path: build/libs/*.jar
+          retention-days: 5 # Retain artifact for 5 days

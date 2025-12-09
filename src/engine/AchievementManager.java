@@ -1,12 +1,8 @@
 package engine;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Manages all game achievements (including their state, unlocking logic, and persistence).
@@ -16,19 +12,9 @@ public class AchievementManager {
     private static AchievementManager instance;
     /** List of all achievements in the game. */
     private List<Achievement> achievements;
-    /** Counter for the total number of shots fired by the player. */
-    private int shotsFired = 0;
-    /** Counter for the total number of shots that hit an enemy. */
-    private int shotsHit = 0;
-    /** Flag to ensure the 'First Blood' achievement is unlocked only once. */
-    private boolean firstKillUnlocked = false;
-    /** Flag to ensure the 'Bad Sniper' achievement is unlocked only once. */
-    private boolean sniperUnlocked = false;
-    /** Flag to ensure the 'Bear Grylls' achievement is unlocked only once. */
-    private boolean survivorUnlocked = false;
 
     /**
-     * Private constructor to initialize the achievement list and load their status.
+     * Private constructor to initialize the achievement list.
      * Part of the Singleton pattern.
      */
     private AchievementManager() {
@@ -41,8 +27,6 @@ public class AchievementManager {
         achievements.add(new Achievement("Bear Grylls", "Survive for 60 seconds"));
         achievements.add(new Achievement("Bad Sniper", "Under 80% accuracy"));
         achievements.add(new Achievement("Conqueror", "Clear the final level"));
-
-        loadAchievements();
     }
 
     /**
@@ -58,6 +42,30 @@ public class AchievementManager {
     }
 
     /**
+     * Synchronizes the in-memory achievement status with the given user's data.
+     *
+     * @param user The user whose achievements should be loaded. If null, all achievements are reset to locked.
+     */
+    public void syncAchievementsWithUser(User user) {
+        if (user == null) {
+            // No user logged in, so lock all achievements.
+            for (Achievement achievement : achievements) {
+                achievement.lock();
+            }
+        } else {
+            // User is logged in, update from their achievement map.
+            java.util.Map<String, Boolean> userAchievements = user.getAchievements();
+            for (Achievement achievement : achievements) {
+                if (userAchievements.getOrDefault(achievement.getName(), false)) {
+                    achievement.unlock();
+                } else {
+                    achievement.lock();
+                }
+            }
+        }
+    }
+
+    /**
      * Gets the list of all achievements.
      *
      * @return A list of all achievements.
@@ -67,107 +75,65 @@ public class AchievementManager {
     }
 
     /**
-     * Unlocks a specific achievement by name.
-     * If the achievement is found and not already unlocked, it marks it as unlocked
-     * and saves the updated status.
+     * Unlocks a specific achievement by name for the current user.
      *
      * @param name The name of the achievement to unlock.
      */
     public void unlockAchievement(String name) {
+        User currentUser = Core.getCurrentUser();
+        if (currentUser == null) {
+            Core.getLogger().warning("Attempted to unlock achievement '" + name + "' with no user logged in.");
+            return;
+        }
+
         for (Achievement achievement : achievements) {
             if (achievement.getName().equals(name) && !achievement.isUnlocked()) {
                 achievement.unlock();
+                currentUser.setAchievementStatus(name, true);
 
-                saveAchievements();
+                // Persist the change
+                try {
+                    Core.getFileManager().saveUsers(UserManager.getInstance().getUsers());
+                } catch (IOException e) {
+                    Core.getLogger().severe("Failed to save user data after unlocking achievement: " + e.getMessage());
+                }
                 break;
             }
         }
     }
 
     /**
-     * Handles game events when an enemy is defeated.
-     * Checks for and unlocks achievements related to enemy kills and accuracy.
+     * Handles game events when an enemy is defeated to check for achievements.
      */
-    public void onEnemyDefeated() {
-        if (!firstKillUnlocked) {
+    public void checkKillAchievements(GameState gameState) {
+        User currentUser = Core.getCurrentUser();
+        if (currentUser == null || gameState == null) return;
+
+        // First Blood Achievement
+        if (!currentUser.getAchievements().getOrDefault("First Blood", false)) {
             unlockAchievement("First Blood");
-            firstKillUnlocked = true;
         }
 
-        shotsHit++;
-
-        if (!sniperUnlocked && shotsFired > 5) {
-            double accuracy = (shotsHit / (double) shotsFired) * 100.0;
-            if (accuracy <= 80.0) {
+        // Bad Sniper Achievement
+        if (!currentUser.getAchievements().getOrDefault("Bad Sniper", false) && gameState.getBulletsShot() > 5) {
+            double accuracy = (double) gameState.getShipsDestroyed() / gameState.getBulletsShot();
+            if (accuracy <= 0.8) {
                 unlockAchievement("Bad Sniper");
-                sniperUnlocked = true;
             }
         }
     }
 
     /**
      * Handles game events related to elapsed time.
-     * Checks for and unlocks achievements related to survival time.
      *
      * @param elapsedSeconds The total number of seconds elapsed in the game.
      */
     public void onTimeElapsedSeconds(int elapsedSeconds) {
-        if (!survivorUnlocked && elapsedSeconds >= 60) {
+        User currentUser = Core.getCurrentUser();
+        if (currentUser == null) return;
+
+        if (!currentUser.getAchievements().getOrDefault("Bear Grylls", false) && elapsedSeconds >= 60) {
             unlockAchievement("Bear Grylls");
-            survivorUnlocked = true;
-        }
-    }
-
-    /**
-     * Handles the game event when a shot is fired.
-     * Increments the counter for shots fired.
-     */
-    public void onShotFired() {
-        shotsFired++;
-    }
-
-    /**
-     * Loads achievement status from file and updates the current achievement list.
-     * <p>
-     * Requests the FileManager to load saved achievement data, then updates
-     * each achievement's unlocked state accordingly.
-     * </p>
-     *
-     * @throws RuntimeException
-     *             If an I/O error occurs while loading achievements.
-     */
-    public void loadAchievements() {
-        try {
-            // Ask FileManager to load saved achievement status
-            java.util.Map<String, Boolean> unlockedStatus = Core.getFileManager().loadAchievements();
-            // Update the state of each achievement based on the loaded data.
-            for (Achievement achievement : achievements) {
-                if (unlockedStatus.getOrDefault(achievement.getName(), false)) {
-                    achievement.unlock();
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to load achievement file! Creating a new one.");
-            // If file loading fails, attempt an initial save.
-            saveAchievements();
-        }
-    }
-    /**
-     * Saves the current achievement status to file.
-     * <p>
-     * Requests the FileManager to write all current achievements to disk.
-     * </p>
-     *
-     * @throws RuntimeException
-     *             If an I/O error occurs while saving achievements.
-     */
-    private void saveAchievements() {
-        try {
-            // Ask FileManager to save all current achievement data
-            Core.getFileManager().saveAchievements(achievements);
-        } catch (IOException e) {
-            System.err.println("Failed to save achievement file!");
-            e.printStackTrace();
         }
     }
 
